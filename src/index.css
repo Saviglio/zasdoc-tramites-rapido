@@ -1,15 +1,25 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
+/* Zas!doc Design System
+   Brand: Yellow #FFC72C + Blue #1D4ED8
+   All colors MUST be HSL.
 */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Brand */
+    --brand-yellow: 44 100% 58%;       /* #FFC72C */
+    --brand-yellow-soft: 44 100% 70%;
+    --brand-blue: 224 76% 48%;         /* #1D4ED8 */
+    --brand-blue-dark: 224 76% 38%;
+    --brand-blue-soft: 224 76% 95%;
+
+    --background: 44 100% 58%;
+    --foreground: 224 76% 20%;
 
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
