@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import Logo from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -17,24 +19,111 @@ const estadoColor: Record<EstadoSolicitud, string> = {
   "Entregado": "bg-green-100 text-green-800 border-green-300",
 };
 
+// NOTE: This is a temporary client-side gate to prevent casual access to the
+// advisor panel. It is NOT real security — anyone with the password (or who
+// inspects the bundle) can get in. For production, migrate to Lovable Cloud
+// with Supabase Auth + RLS so only authenticated staff can read solicitudes.
+const ADVISOR_PASSCODE = "zasdoc-2025";
+const SESSION_KEY = "zasdoc_asesor_session";
+
 const Asesor = () => {
+  const [authed, setAuthed] = useState(false);
+  const [passcode, setPasscode] = useState("");
   const [list, setList] = useState<Solicitud[]>([]);
 
   useEffect(() => {
-    setList(getSolicitudes());
+    if (sessionStorage.getItem(SESSION_KEY) === "1") {
+      setAuthed(true);
+    }
   }, []);
+
+  useEffect(() => {
+    if (authed) setList(getSolicitudes());
+  }, [authed]);
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passcode === ADVISOR_PASSCODE) {
+      sessionStorage.setItem(SESSION_KEY, "1");
+      setAuthed(true);
+      toast.success("Acceso concedido");
+    } else {
+      toast.error("Código incorrecto");
+      setPasscode("");
+    }
+  };
+
+  const handleLogout = () => {
+    sessionStorage.removeItem(SESSION_KEY);
+    setAuthed(false);
+    setPasscode("");
+  };
 
   const marcarEntregado = (id: string) => {
     setList(updateEstado(id, "Entregado"));
     toast.success("Solicitud marcada como entregada");
   };
 
+  if (!authed) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <header className="bg-brand-blue">
+          <div className="container-app py-5 flex items-center justify-between">
+            <Link to="/"><Logo variant="onBlue" /></Link>
+            <span className="text-primary-foreground font-semibold text-sm">Panel del Asesor</span>
+          </div>
+        </header>
+        <main className="flex-1 flex items-center justify-center px-4">
+          <form
+            onSubmit={handleLogin}
+            className="w-full max-w-sm bg-card rounded-2xl shadow-soft border p-6 space-y-4"
+          >
+            <div>
+              <h1 className="font-display text-2xl text-brand-blue">Acceso restringido</h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                Ingresa el código de asesor para ver las solicitudes.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="passcode">Código de acceso</Label>
+              <Input
+                id="passcode"
+                type="password"
+                autoFocus
+                autoComplete="current-password"
+                value={passcode}
+                onChange={(e) => setPasscode(e.target.value)}
+                placeholder="••••••••"
+              />
+            </div>
+            <Button
+              type="submit"
+              className="w-full bg-brand-blue hover:bg-brand-blue-dark text-primary-foreground rounded-full font-semibold"
+            >
+              Ingresar
+            </Button>
+          </form>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <header className="bg-brand-blue">
         <div className="container-app py-5 flex items-center justify-between">
           <Link to="/"><Logo variant="onBlue" /></Link>
-          <span className="text-primary-foreground font-semibold text-sm">Panel del Asesor</span>
+          <div className="flex items-center gap-3">
+            <span className="text-primary-foreground font-semibold text-sm">Panel del Asesor</span>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleLogout}
+              className="rounded-full font-semibold"
+            >
+              Salir
+            </Button>
+          </div>
         </div>
       </header>
 
